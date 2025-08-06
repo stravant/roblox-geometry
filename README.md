@@ -5,7 +5,7 @@ This is a module which contains two important geometry functions for Roblox tool
 
 This is a function which returns a detailed mesh representation of the geometry of a Roblox primitive. That is, one of the five primitive types between a Box, WedgePart, CornerWedgePart, Sphere, or Cylinder. It contains all the logic to decide which of those geometries is appropriate for a given BasePart.
 
-You can optionally pass a CFrame as the third argument to get the geometry assuming that the part were at that CFrame rather than where it currently is. Note: Passing `CFrame.identity` here will effectively give you the geometry in the local space of the object rather than in world space like it is normally given.
+You can optionally pass a CFrame as the second argument to get the geometry assuming that the part were at that CFrame rather than where it currently is. Note: Passing `CFrame.identity` here will effectively give you the geometry in the local space of the object rather than in world space like it is normally given.
 
 The id on each element is a stable id from invocation to invocation allowing you to track the same element across multiple invocations.
 
@@ -13,44 +13,64 @@ The vertexMargin / edgeMargin are the minimum amount of "safe" space perpendicul
 
 The data is returned in the following format:
 ```luau
-type GeometryVertex = {
-	id: number,
-	position: Vector3,
-	type: "Vertex",
+export type SurfaceType =
+	| "BottomSurface"
+	| "RightSurface"
+	| "FrontSurface"
+	| "LeftSurface"
+	| "BackSurface"
+	| "TopSurface"
+
+export type Shape =
+	| "Cylinder"
+	| "Sphere"
+	| "Mesh"
+
+type Identifier<T> = {
+	type: T,
+	__index: Identifier<T>,
 }
 
-type GeometryEdge = {
-	id: number,
+type BaseGeometryInfo<T, I, ID = number?> = typeof(setmetatable(
+	{} :: I & {
+		id: ID,
+	},
+	{} :: Identifier<T>
+))
+
+export type UnitVector = Vector3
+
+export type Vertex<ID = nil> = BaseGeometryInfo<"Vertex", {
+	position: Vector3,
+}, ID>
+
+export type Edge<ID = nil> = BaseGeometryInfo<"Edge", {
+	direction: UnitVector,
+	vertexMargin: number,
+	edgeMargin: number,
+	inferred: true?,
+	length: number,
+	part: BasePart,
 	a: Vector3,
 	b: Vector3,
-	direction: UnitVector3,
-	length: number,
-	edgeMargin: number,
-	vertexMargin: number,
-	part: BasePart,
-	type: "Edge",
-}
+}, ID>
 
-type SurfaceType = "BottomSurface" | "TopSurface" | "LeftSurface" | "RightSurface" | "FrontSurface" | "BackSurface"
-
-type GeometryFace = {
-	id: number,
-	point: Vector3,
-	normal: UnitVector3,
+export type Face<ID = nil> = BaseGeometryInfo<"Face", {
+	direction: UnitVector,
+	vertices: { Vector3 },
 	surface: SurfaceType,
-	direction: UnitVector3,
-	vertices: {Vector3},
+	normal: UnitVector,
+	point: Vector3,
 	part: BasePart,
-	type: "Face",
-}
+}, ID>
 
-type GeometryResult = {
-	part: BasePart,
-	shape: "Sphere" | "Cylinder" | "Mesh",
-	vertices: {GeometryVertex},
-	edges: {GeometryEdge},
-	faces: {GeometryFace},
+export type GeometryResult = {
+	vertices: { Vertex<number> },
+	edges: { Edge<number> },
+	faces: { Face<number> },
 	vertexMargin: number,
+	part: BasePart,
+	shape: Shape,
 }
 ```
 
