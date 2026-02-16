@@ -325,10 +325,6 @@ local function findNearestInterestingPoint(mainBasis: CFrame, part: BasePart): (
 						local sideHit = workspace:Raycast(castFrom, backToOrigin, params)
 						if sideHit then
 							return sideHit.Position, sideHit.Normal
-						else
-							-- The side hit should always hit, because it should at least intersect
-							-- with the plane we initially started on.
-							assert(false, "Unreachable")
 						end
 					end
 				end
@@ -336,8 +332,7 @@ local function findNearestInterestingPoint(mainBasis: CFrame, part: BasePart): (
 			distanceStep *= 2
 		end
 	end
-	-- Should always eventually end up missing
-	assert(false, "Unreachable")
+	return nil, nil
 end
 
 local function intersectPlanePlane(p1: Vector3, n1: Vector3, p2: Vector3, n2: Vector3)
@@ -446,7 +441,10 @@ function Geometry.blackboxFindClosestMeshEdge(hit: RaycastResult, viewDirection:
 	-- We want to explore outwards over this plane until we find where it ends
 	-- (that is, where parallel raycasts diverge from the plane)
 	local p2, n2 = findNearestInterestingPoint(mainBasis, part)
-	
+	if not p2 or not n2 then
+		return nil
+	end
+
 	-- Find the axis which goes through both (p, n) and (p2, n2)
 	local origin, dir = intersectPlanePlane(p, n, p2, n2)
 	
